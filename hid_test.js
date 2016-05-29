@@ -23,6 +23,10 @@
 	device.open();
 	console.log("Device connected");
 	
+	pollTimeout = setInterval(function() {
+            input = device.read(48);
+	    console.log(input);
+        }, 100);
     };
     
     ext._deviceRemoved = function(dev) {
