@@ -56,7 +56,7 @@
     // Block and block menu descriptions
     var descriptor = {
         blocks: [
-	    [' ', 'set state %n, 'set_state',0],
+	    [' ', 'set state %n', 'set_state',0],
         ]
     };
     // Register the extension
