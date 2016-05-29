@@ -44,7 +44,7 @@
         return {status: 2, msg: 'Controller connected'};
     }
     
-    ext.set_LED_RGB = function(state)
+    ext.set_state = function(state)
     {
 	console.log("Sending data");
 	var d = UInt8Array([]);
