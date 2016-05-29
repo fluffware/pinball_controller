@@ -24,8 +24,9 @@
 	console.log("Device connected");
 	
 	pollTimeout = setInterval(function() {
-            input = device.read(48);
-	    console.log(input);
+            device.read(function(data) {
+		console.log(data);
+	    });
         }, 100);
     };
     
