@@ -15,7 +15,8 @@
 	    device = null;
 	}
     };
-    
+
+    var received = [];
     ext._deviceConnected = function(dev) {
 	if(device) return;
 	
@@ -25,9 +26,12 @@
 	
 	pollTimeout = setInterval(function() {
             device.read(function(data) {
-		console.log(data);
+		received = data;
 	    });
         }, 100);
+	pollTimeout = setInterval(function() {
+		console.log(received);
+        }, 1000);
     };
     
     ext._deviceRemoved = function(dev) {
