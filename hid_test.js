@@ -29,7 +29,7 @@
 		received = data;
 	    });
         }, 100);
-	pollTimeout = setInterval(function() {
+	setInterval(function() {
 		console.log(received);
         }, 1000);
     };
@@ -37,8 +37,8 @@
     ext._deviceRemoved = function(dev) {
 	console.log("Device removed");
         if(device != dev) return;
-        device = null;
         stopPolling();
+        device = null;
     };
     
     function stopPolling() {
