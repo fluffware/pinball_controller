@@ -69,5 +69,6 @@
         ]
     };
     // Register the extension
-    ScratchExtensions.register('HID test', descriptor, ext, {type: "hid", vendor: 0x03f0, product: 0x0024});
+    ScratchExtensions.register('HID test', descriptor, ext, {type: "hid", vendor: 0xffff, product: 0xffff});
 })({});
+console.log("hid_test egistered");
