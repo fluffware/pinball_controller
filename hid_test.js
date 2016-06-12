@@ -3,12 +3,17 @@
 (function(ext) {    
 
     var pollTimeout = null;
+    var printTimeout = null;
     var device = null;
     // Cleanup function when the extension is unloaded
     ext._shutdown = function() {
 	if (pollTimeout != null) {
 	    clearTimeout(pollTimeout);
 	    pollTimeout = null;
+	}
+	if (printTimeout != null) {
+	    clearTimeout(printTimeout);
+	    printTimeout = null;
 	}
 	if (device) {
 	    device.close();
@@ -26,10 +31,11 @@
 	
 	pollTimeout = setInterval(function() {
             device.read(function(data) {
+		console.log("Read: "+ data.byteLength);
 		received = data;
 	    });
         }, 100);
-	setInterval(function() {
+	printTimeout = setInterval(function() {
 		console.log(received);
         }, 1000);
     };
@@ -44,6 +50,8 @@
     function stopPolling() {
         if(pollTimeout) clearInterval(pollTimeout);
         pollTimeout = null;
+        if(printTimeout) clearInterval(printTimeout);
+        printTimeout = null;
     }
 
     
