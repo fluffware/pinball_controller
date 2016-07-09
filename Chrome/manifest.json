@@ -1,0 +1,16 @@
+{
+    "name": "Pinball Controller",
+    "description": "Interfaces to pinball controller using USB HID",
+    "version": "0.1",
+    "manifest_version": 2,
+    "app": {
+	"background": {
+	    "scripts": ["background.js"],
+	"persistent": false
+	}
+    },
+    "icons": { "16": "pinball-16.png", "128": "pinball-128.png" },
+    "permissions": ["hid", {"usbDevices":
+			    [ { "vendorId": 65535, "productId": 65535 } ]
+			   }]
+}
