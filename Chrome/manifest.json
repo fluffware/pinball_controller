@@ -16,6 +16,7 @@
 			   }],
     "externally_connectable": {
 	"matches": [
+	    "*://scratchx.org/*",
 	    "*://fluffware.github.io/*",
 	    "*://mosse.local.fluffware.se/*"
 	]
