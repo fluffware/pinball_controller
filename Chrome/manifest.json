@@ -1,7 +1,7 @@
 {
-    "name": "Pinball Controller",
+    "name": "ScratchX Pinball Controller",
     "description": "Interfaces to pinball controller using USB HID",
-    "version": "0.1",
+    "version": "0.0.2",
     "manifest_version": 2,
     "app": {
 	"background": {
@@ -10,7 +10,14 @@
 	}
     },
     "icons": { "16": "pinball-16.png", "128": "pinball-128.png" },
+    "key": "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAnx2xiIHhhYdhzCbbywzxCX9qa11PuCmcRZqilZ4NXgScUxvSxAAWCq1Ed3iC6rsL57Ws9UhNmLogCV/2g37kAZ28uU2mh8yJXXiUXdTmEye2QLW2oMzWhy7BqiCukUaaIYfWB5ytZnACRXw3kjxA6p5Ir63eFpDmUDjUM3eLaOuTREcnVSm/vQ6CjoACesQ0pewMk2XY8odAFUC/JOx0ea+V3lbfUXzPmum65hlGriWTCUifhMA02DGwT6t7/SlWGtDC8tJK4lDV848iJWNDRRKvg08aMS6nlFUgRvGazF8iXS3crs0UiF9Vst7v0D+A/51J1lDGIZZ97dA6NjUfNQIDAQAB",
     "permissions": ["hid", {"usbDevices":
 			    [ { "vendorId": 65535, "productId": 65535 } ]
-			   }]
+			   }],
+    "externally_connectable": {
+	"matches": [
+	    "*://fluffware.github.io/*",
+	    "*://mosse.local.fluffware.se/*"
+	]
+    }
 }

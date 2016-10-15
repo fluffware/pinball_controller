@@ -46,7 +46,8 @@ function HIDHandler(vid,pid)
 			   {
 			       if (chrome.runtime.lastError) {
 				   console.log("Reception from HID device failed: "+
-					       chrome.runtime.lastError.message);				   
+					       chrome.runtime.lastError.message);				   chrome.hid.receive(connectionId, 
+																      receivedReport);
 				   return;
 			       }
 			       console.log("Received report: "+ reportId);
@@ -57,8 +58,8 @@ function HIDHandler(vid,pid)
 					    str += v.toString(16)+",";
 					});
 			       console.log("Data: "+str);
-			   chrome.hid.receive(connectionId, 
-					      receivedReport);
+			       chrome.hid.receive(connectionId, 
+						  receivedReport);
 			   });
     }
     
@@ -134,7 +135,7 @@ document.addEventListener('DOMContentLoaded', function () {
 	    }
 	});
     }
-    
+  
 });
 
 
