@@ -2,54 +2,58 @@
 
 (function(ext) {    
 
-    var pollTimeout = null;
+    var reconnectTimer = null;
     var device = null;
+
+    // Extension ID for the HID driver
+    var helperID = "jjmgliejomegdebmoaaidfbeimfclnaj";
+    var port = null;
+    
+    function connect() {
+	reconnectTimer = null;
+	port = chrome.runtime.connect(helperID, {"name":"ScratchX"});
+	port.onDisconnect.addListener(function() {
+	    if (chrome.runtime.lastError) {
+		console.log("Connection failed: ", chrome.runtime.lastError.message);
+		port = null;
+		// Try to reconnect after 5s
+		reconnectTimer = setTimeout(connect, 5000);
+	    }
+	    
+	});
+	port.onMessage.addListener(function(msg, port) {
+	    console.log("Got reply: ", msg);
+	});
+    }
     // Cleanup function when the extension is unloaded
     ext._shutdown = function() {
-	if (pollTimeout != null) {
-	    clearTimeout(pollTimeout);
-	    pollTimeout = null;
+	if (reconnectTimer != null) {
+	    clearTimeout(reconnectTimer);
+	    reconnectTimer = null;
 	}
-	if (device) {
-	    device.close();
-	    device = null;
+	if (port) {
+	    port.disconnect();
+	    port = null;
 	}
     };
-    
-    ext._deviceConnected = function(dev) {
-	if(device) return;
-	
-	device = dev;
-	device.open();
-	console.log("Device connected");
-	
-    };
-    
-    ext._deviceRemoved = function(dev) {
-	console.log("Device removed");
-        if(device != dev) return;
-        device = null;
-        stopPolling();
-    };
-    
-    function stopPolling() {
-        if(pollTimeout) clearInterval(pollTimeout);
-        pollTimeout = null;
-    }
-
     
 
     ext._getStatus = function() {
-        if(!device) return {status: 1, msg: 'Controller disconnected'};
+        if(!port) return {status: 1, msg: 'Controller disconnected'};
         return {status: 2, msg: 'Controller connected'};
+    }
+    
+    function clamp(num, min, max) {
+	return num <= min ? min : num >= max ? max : num;
     }
     
     ext.set_LED_RGB = function(index, red, green , blue)
     {
-	console.log("Sending data");
-	var d = UInt8Array([index, 0, index + 1, 0, red, green, blue]);
-	device.write(d);
-	console.log("Sent data");
+	red = clamp(red, 0, 1);
+	green = clamp(green, 0, 1);
+	blue = clamp(blue, 0, 1);
+	port.postMessage({request:"set_color", start: index, end: index + 1, 
+			  red: red*255, green: green*255, blue: blue*255});
     }
     
     
@@ -61,4 +65,9 @@
     };
     // Register the extension
     ScratchExtensions.register('Pinball controller', descriptor, ext, {type: "hid", vendor: 0xffff, product: 0xffff});
+
+    // Start connection
+    connect();
+    
 })({});
+
