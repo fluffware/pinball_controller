@@ -19,9 +19,9 @@ USBBuffer recv_buffer;
 
 USBBuffer xmit_buffer[4];
 
-#define SERIAL_IN 0x81
+#define SERIAL_IN 0x83
 #define SERIAL_OUT 0x02
-#define INTERRUPT_IN 0x83
+#define INTERRUPT_IN 0x81
 
 static void
 submit_recv(void)
@@ -32,7 +32,7 @@ submit_recv(void)
     recv_buffer.left = sizeof(recv_data);
     recv_buffer.flags = USB_BUFFER_NOTIFY | USB_BUFFER_PACKET_END;
     recv_buffer.id = 0;
-    usb_submit_recv_buffer(SERIAL_OUT, &recv_buffer);
+    usb_submit_buffer(SERIAL_OUT, &recv_buffer);
     /* printf("submit_recv: %d\n",i); */
   }
 }
@@ -116,6 +116,10 @@ handle_blit(uint8_t *data, unsigned int length)
   usb_send_ctrl_status();
 }
 
+static uint8_t idle_rate[4] = {0,};
+
+#define HID_REPORT_DESCRIPTOR_BLOCK descriptor_wrapper.hid_report_descriptor
+#define HID_DESCRIPTOR_BLOCK descriptor_wrapper.configuration_block.hid
 static unsigned int
 handle_hid_requests()
 {
@@ -124,10 +128,16 @@ handle_hid_requests()
   case 0x81:
     switch(usb_setup_buffer.bRequest) {
     case GET_DESCRIPTOR:
+      printf("Get HID report decriptor\n");
       if (usb_setup_buffer.wValue == 0x2200 
-	  && usb_setup_buffer.wLength >= sizeof(descriptor_wrapper.hid_report_descriptor)) {
-	usb_send_ctrl_response((const uint8_t*)&descriptor_wrapper.hid_report_descriptor,
-			       sizeof(descriptor_wrapper.hid_report_descriptor));
+	  && usb_setup_buffer.wLength >= sizeof(HID_REPORT_DESCRIPTOR_BLOCK)) {
+	usb_send_ctrl_response((const uint8_t*)&HID_REPORT_DESCRIPTOR_BLOCK,
+			       sizeof(HID_REPORT_DESCRIPTOR_BLOCK));
+	return 1;
+      } else if (usb_setup_buffer.wValue == 0x2100
+		 && usb_setup_buffer.wLength >= sizeof(HID_DESCRIPTOR_BLOCK)) {
+	usb_send_ctrl_response((const uint8_t*)&HID_DESCRIPTOR_BLOCK,
+			       sizeof(HID_DESCRIPTOR_BLOCK));
 	return 1;
       }
       return 0;
@@ -137,9 +147,13 @@ handle_hid_requests()
     switch(usb_setup_buffer.bRequest) {
     case SET_IDLE:
       if (usb_setup_buffer.wLength == 0) {
-	printf("Dur: %d, id: %d\n", 
-	       usb_setup_buffer.wLength>>8,
-	       usb_setup_buffer.wLength & 0xff);
+	if ((usb_setup_buffer.wValue & 0xff) < 4) {
+	  idle_rate[usb_setup_buffer.wValue & 0xff] =
+	    usb_setup_buffer.wValue>>8;
+	  printf("Dur: %d, id: %d\n", 
+		 usb_setup_buffer.wValue>>8,
+		 usb_setup_buffer.wValue & 0xff);
+	}
 	usb_send_ctrl_status();
 	return 1;
       }
@@ -165,6 +179,14 @@ handle_hid_requests()
 	  && usb_setup_buffer.wLength >= sizeof(display_report)) {
 	usb_send_ctrl_response((const uint8_t*)&display_report,
 			       sizeof(display_report));
+	return 1;
+      }
+      return 0;
+    case GET_IDLE:
+      if (usb_setup_buffer.wValue < 4) {
+	usb_send_ctrl_response((const uint8_t*)
+			       &idle_rate[usb_setup_buffer.wValue],
+			       sizeof(uint8_t));
 	return 1;
       }
       return 0;
@@ -202,7 +224,7 @@ PROCESS_THREAD(usb_pinball_process, ev , data)
   usb_hid_setup();
   printf("usb_setup done\n");
   usb_set_global_event_process(process_current);
-  etimer_set(&timer,1*CLOCK_SECOND);
+ 
   
   while(1) {
     PROCESS_WAIT_EVENT();
@@ -213,6 +235,13 @@ PROCESS_THREAD(usb_pinball_process, ev , data)
 	if (events & USB_EVENT_RESET) {
 	  printf("USB_EVENT_RESET\n");
 	}
+	if (events & USB_EVENT_SUSPEND) {
+	  printf("USB_EVENT_SUSPEND\n");
+	}
+	if (events & USB_EVENT_RESUME) {
+	  printf("USB_EVENT_RESUME\n");
+	}
+	
 	if (events & USB_EVENT_CONFIG) {
 	  printf("USB_EVENT_CONFIG %d\n",usb_get_current_configuration());
 	  if (usb_get_current_configuration() == 1) {
@@ -222,14 +251,18 @@ PROCESS_THREAD(usb_pinball_process, ev , data)
 	    usb_set_ep_event_process(SERIAL_OUT, process_current);
 	    usb_set_ep_event_process(SERIAL_IN, process_current);
 	    usb_set_ep_event_process(INTERRUPT_IN, process_current);
-	    submit_recv(); 
+	    submit_recv();
+	    etimer_set(&timer,1*CLOCK_SECOND);
 	  } else {
 	    usb_disable_endpoint(SERIAL_OUT);
 	    usb_disable_endpoint(SERIAL_IN);
 	    usb_disable_endpoint(INTERRUPT_IN);
+
+	    etimer_stop(&timer);
 	  }
 	}
       }
+#if 0
       events = usb_get_ep_events(SERIAL_OUT);
       if (events) {
 	if (events & USB_EP_EVENT_NOTIFICATION) {
@@ -247,24 +280,27 @@ PROCESS_THREAD(usb_pinball_process, ev , data)
 	if (events & USB_EP_EVENT_NOTIFICATION) {
 	}
       }
+#endif
     }
+#if 1
     if (ev == PROCESS_EVENT_TIMER) {
       USBBuffer *buf;
       buf = &xmit_buffer[0];
       if (!(buf->flags & USB_BUFFER_SUBMITTED)) {
-	static const uint8_t report[3] = {0x03, 0x10,0x10};
+	static const uint8_t report[3] = {0x03,0x01,0x04};
 	buf->next = NULL;
 	buf->data = (uint8_t*)report;
-	buf->left = 4;
-	buf->flags = 0;
+	buf->left = 3;
+	buf->flags = USB_BUFFER_IN;
 	buf->id = 5;
-	usb_submit_xmit_buffer(INTERRUPT_IN, buf);
+	usb_submit_buffer(INTERRUPT_IN, buf);
 	printf("+");
       } else {
 	printf("-");
       }
       etimer_reset(&timer);
     }
+#endif
   }
   PROCESS_END();
 }

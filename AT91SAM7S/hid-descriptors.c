@@ -40,6 +40,7 @@ usb_class_get_string_descriptor(uint16_t lang, uint8_t index)
 	}
       }
       strings += *strings * 2 + 1;
+      langid++;
     }
     printf("usb_class_get_string_descriptor: No match\n");
     return 0;

@@ -122,6 +122,7 @@
 
 /* Usage page */
 #define USAGE_PAGE_GENERIC_DESKTOP 0x01
+#define USAGE_PAGE_BUTTON 0x09
 #define USAGE_PAGE_ORDINAL 0x0a
 #define USAGE_PAGE_ALPHANUMERIC_DISPLAY 0x14
 #define USAGE_PAGE_ARCADE 0x91
@@ -134,6 +135,23 @@
 #define USAGE_CA_KEYBOARD 0x06
 #define USAGE_CA_KEYPAD 0x07
 #define USAGE_CA_MULTIAXIS_CONTROLLER 0x08
+
+#define USAGE_DV_X 0x30
+#define USAGE_DV_Y 0x31
+#define USAGE_DV_Z 0x32
+#define USAGE_DV_Rx 0x33
+#define USAGE_DV_Ry 0x34
+#define USAGE_DV_Rz 0x35
+
+#define USAGE_DV_SLIDER 0x36
+#define USAGE_DV_DIAL 0x37
+#define USAGE_DV_WHEEL 0x38
+#define USAGE_DV_HAT_SWITCH 0x39
+
+
+
+/* Button page */
+#define USAGE_BUTTON(x) (x)
 
 /* Alphanumeric Display Page */
 #define USAGE_CA_ALPHANUMERIC_DISPLAY 0x01
