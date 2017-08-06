@@ -4,7 +4,7 @@ function PinnballConnection() {
     this.connect = function() {
 	if (device) return;
 	console.log("Connect");
-	chrome.getDevices([], gotDeviceList);
+	chrome.hid.getDevices([], gotDeviceList);
 	
 	
     }
